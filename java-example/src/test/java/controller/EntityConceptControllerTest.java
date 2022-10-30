@@ -62,9 +62,6 @@ class EntityConceptControllerTest {
         List<DefinitionEntity> definitions = concepts.get(0).definitions;
 
         // Assert (Then)
-        assertThat(definitions).hasSize(3);
-        DefinitionEntity first = definitions.get(0);
-
         //FIXME : ICI, ce test test échoue car en voulant retourner uniquement le nom des définitions dans
         //  controller.findDefinitionsByTag("Java");
         //  nous avons modifié les instances de DefinitionEntity
@@ -74,11 +71,10 @@ class EntityConceptControllerTest {
         //  Utiliser des DTO et des mappers nous aurait protégé de ce phénomène
         //  Utiliser des copies non modifiables des collections aurait encore amélioré cela
         assertAll(
-                () -> assertThat(first.name).describedAs("definition.name").isNotNull(),
-                () -> assertThat(first.contenu).describedAs("definition.contenu").isNotNull(),
-                () -> assertThat(first.tags).describedAs("definition.tags").isNotNull(),
+                () -> assertThat(definitions.get(0).name).describedAs("definition.name").isNotNull(),
+                () -> assertThat(definitions.get(0).contenu).describedAs("definition.contenu").isNotNull(),
+                () -> assertThat(definitions.get(0).tags).describedAs("definition.tags").isNotNull(),
                 () -> assertThat(definitions).hasSize(3));
-
     }
 
     private EntityConceptController setup() {

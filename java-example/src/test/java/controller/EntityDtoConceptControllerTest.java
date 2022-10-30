@@ -62,12 +62,10 @@ class EntityDtoConceptControllerTest {
         List<ConceptResponseDto.DefinitionDto> definitions = concepts.get(0).definitions;
 
         // Assert (Then)
-        ConceptResponseDto.DefinitionDto first = definitions.get(0);
-
         assertAll(
-                () -> assertThat(first.name).describedAs("definition.name").isNotNull(),
-                () -> assertThat(first.contenu).describedAs("definition.contenu").isNotNull(),
-                () -> assertThat(first.tags).describedAs("definition.tags").isNotNull(),
+                () -> assertThat(definitions.get(0).name).describedAs("definition.name").isNotNull(),
+                () -> assertThat(definitions.get(0).contenu).describedAs("definition.contenu").isNotNull(),
+                () -> assertThat(definitions.get(0).tags).describedAs("definition.tags").isNotNull(),
                 () -> assertThat(definitions).hasSize(3),
                 () -> assertThat(definitionsByTag.definitions).hasSize(2));
 
