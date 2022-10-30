@@ -7,13 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.stream.Collectors.toList;
 
-public class ConceptRepository {
+// Implémentation en mémoire.
+// Pourrait également être une implémentation JPA
+public class InMemoryConceptRepository {
 
     private final Set<ConceptEntity> concepts;
 
-    public ConceptRepository(Set<ConceptEntity> concepts) {
+    public InMemoryConceptRepository(Set<ConceptEntity> concepts) {
         this.concepts = concepts;
     }
 

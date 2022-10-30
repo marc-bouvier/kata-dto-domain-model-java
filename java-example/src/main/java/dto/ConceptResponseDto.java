@@ -27,14 +27,15 @@ public class ConceptResponseDto implements Serializable {
         this.definitions = DefinitionDto.fromList(conceptEntity.definitions);
     }
 
-    // Mapper
-    // Mapstruct / Dozer
+    // Mapper à la main:
+    // Il existe aussi des outils comme Mapstruct / Dozer pour le faire
     public static List<ConceptResponseDto> fromList(List<ConceptEntity> all) {
         return all.stream()
                 .map(ConceptResponseDto::new)
                 .collect(Collectors.toList());
     }
 
+    // Classe interne pour signifier explicitement qu'elle n'a pas de sens en dehors de ConceptResponseDto
     public static class DefinitionDto {
 
         public String name;
@@ -44,6 +45,7 @@ public class ConceptResponseDto implements Serializable {
         public DefinitionDto(DefinitionEntity definitionEntity) {
             this.name = definitionEntity.name;
             this.contenu = definitionEntity.contenu;
+            // Pour éviter de modifer les vrais objets on crée une copie non moifiable
             this.tags = Collections.unmodifiableSet(new HashSet<>(definitionEntity.tags));
         }
 

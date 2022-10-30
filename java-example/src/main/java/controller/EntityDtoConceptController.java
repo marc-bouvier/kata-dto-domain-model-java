@@ -1,7 +1,7 @@
 package controller;
 
 
-import dao.ConceptRepository;
+import dao.InMemoryConceptRepository;
 import dto.ConceptResponseDto;
 import dto.DefinitionsByTagResponseDto;
 
@@ -20,10 +20,10 @@ import java.util.List;
 
 public class EntityDtoConceptController {
 
-    private final ConceptRepository conceptRepository;
+    private final InMemoryConceptRepository conceptRepository;
 
     // @Autowired
-    public EntityDtoConceptController(ConceptRepository conceptRepository) {
+    public EntityDtoConceptController(InMemoryConceptRepository conceptRepository) {
         this.conceptRepository = conceptRepository;
     }
 
