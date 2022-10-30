@@ -1,20 +1,19 @@
-# Concept de DTO et mappers
+# Pourquoi les DTO et les Mappers?
 
-Tu as travaillé sur une avec des DTO, mappers.
+Tu as travaillé sur une avec des DTO, mappers mais tu ne sais pas à quoi ça sert?
+Prends une tasse de thé et accompagne moi.
 
 ## Définitions
 
 ### DTO
 
-Data Transfer Object
+“Data Transfer Object”
 
 Ce sont des
 - "sacs de données" qui ne contiennent pas d'intelligence particulière.
 - Continennent des données de types primitifs. (String, Integer, ...)
 - Serialisables
 - Très souvent ce sont des données "à plat". (il n'y a pas ou peu de grappes de données)
-
-
 
 **Martin Fowler**
 
@@ -26,7 +25,10 @@ Utilités
 - Séparer la mécanique de (dé)sérialisation du reste de l'application (seuls les DTOs sont destinés à être sérialisés/déséralisés)
 - Forme simplifiée de représentation de données métiers qui peuvent être complexes et difficiles à sérialiser
 
+Inconvénients
+- Ajoute des indirections et des Mappers
 
+Ex.
 
 ```java
 public class ConceptsDto implements Serializable{
@@ -45,14 +47,13 @@ public class DefinitionDto implements Serializable{
 ```
 
 
+## Serializable, Serialisation/Désérialisation
 
-## Serializable
+Structure de données transformable sous forme de texte. Depuis ou vers du texte.
 
-Transformable sous forme de texte. Depuis ou vers du texte.
-
-
-Depuis ou vers du Json
-Depuis ou vers du XML
+Ex.
+- Depuis ou vers du Json
+- Depuis ou vers du XML
 
 En gros tu prends un fichier texte.
 
@@ -89,20 +90,35 @@ public class Definition implements Serializable{
 
 ```
 
+Dans notre cas:
+- Sérialiser = Transformer des objets Java en texte
+- Dé-sérialiser = Transformer du texte en objet Java
 
+Synonymes:
+- Marshall / UnMarshall (XML) ex. avec Jaxb, CXF
 
-
-Sérialiser = Transformer des objets java en texte
-Dé-sérialiser = Transformer du texte en objet java
-
-Marshall / UnMarshall (XML) ex. avec Jaxb CXF
 Json : JaxRS, Jackson
 
-Utile car format "neutre" pour communiquer avec différents systèmes.
+Pourquoi sérialiser des objets?
+
+C'est utile car format "neutre" pour communiquer avec différents systèmes.
+
+On se met d'accord entre producteur et consommateur d'un format.
+On n'a pas besoin de savoir comment ça fonctionne à l'intérieur du producteur ou du consommateur.
+
+C'est un format intermédiaire.
+
+On peut “se mettre d'accord”, établir un contrat d'interface (API) en utilisant des formats standards et des schémas.
+
 - Avec des spécifications plus ou moins standardisées
     - SQL
     - XML (schémas : typer assez fortement les données)
     - JSON
+    - CSV
+    - ...
+    
+    
+Ex. Désérialisation/Sérialisation lors d'un appel à une ressource REST d'une API s'appuyant sur une base de données SQL.
 
 ```mermaid
 sequenceDiagram  
@@ -116,8 +132,6 @@ sequenceDiagram
 	Database ->> Serveur : résultat SQL
 	Note over Serveur,Client : Sérialisation des DTO -> Json
 	Serveur ->> Client : http status 200 application/JSON : {...}
-
-
 
 ```
 
@@ -153,6 +167,9 @@ class Exemple implements Serializable{
 }
 ```
 
+En creusant plus loin, on peut sérialiser/désérialiser des types de plusieurs façons (tout en gardant les même types Java)
+Inversement, on peut également utiliser des types différents qui continuent de sérialiser vers le même texte.
+
 Ex. format de date en "timestamp"
 https://www.timestamp.fr/?
 ```json
@@ -173,6 +190,8 @@ Format de date
 }
 ```
 
+Cela peut répondre à des problématiques d'intéropérabilité et de versionning d'API.
+
 ## Payload (ou body)
 
 Données transportées dans le cadre d'une requete d'appel ou d'une réponse.
@@ -182,11 +201,60 @@ Ex. en HTTP.
 https://synco-doc.timothedavid.fr/#/Auth/post_api_v1_auth_register
 
 
+## CRUD
+
+On dit d'une application qu'elle est un “simple CRUD” quand elle se contente de faire le lien entre son API et sa base de données sans trop d'intelligence supplémentaire.
+
+Elle expose une API qui permettra d'effectuer les opérations suivantes:
+
+- Create
+- Read
+- Update
+- Delete
+
+https://fr.wikipedia.org/wiki/CRUD
+
+Ce type d'application est accesptable en soi et répond à une grande partie des besoins de beaucoup de logiciels.
+
+Dans certains cas on utilise souvent directement des Entités JPA qu'on expose dans les Controllers REST.
+
+Lorsque l'application grandit et se complexifie, cette architecture peut commencer à montrer ses limites.
+
+Généralement on introduit des DTO et des services intermédiaire pour transformer un peu les données entre l'API et la base de données.
+Cela permet d'éviter un couplage fort entre la base de données et l'API exposée.
+
+Si un contrat change (API ou Base de données)
+- Le fait d'avoir des DTO va éviter que le changement soit répercuté sur l'autre contrat.
+
+## DAO : Data Access Object
+
+Un objet qui permet de d'accéder à des données situées dans un système externe (très souvent une base de données).
+
+https://fr.wikipedia.org/wiki/Objet_d%27acc%C3%A8s_aux_donn%C3%A9es
+
+Voir aussi
+https://martinfowler.com/eaaCatalog/transactionScript.html
+https://martinfowler.com/articles/gateway-pattern.html
+
+```java
+
+public interface DefinitionDao {
+
+	// Dans le cas d'un métier riche
+	public Definitions findDefinitionWithTag(Tag tag)
+
+	// Dans le cas d'un CRUD
+	public DefinitionsDto findDefinitionWithTag(String tag)
+	
+
+}
+```
+
 
 ## Domain Model
 
 Dans des applications plutôt complexes.
-On veut un peu plus que des données pures dans nos classes java.
+On veut un peu plus que des données pures dans nos objets java.
 
 En Programmation Orientée Objet (POO ou OOP), on aime bien grouper ensemble **des données** et **des algorithmes** (autrement dit du comportement).
 
@@ -195,7 +263,6 @@ En Programmation Orientée Objet (POO ou OOP), on aime bien grouper ensemble **d
 https://martinfowler.com/eaaCatalog/domainModel.html
 
 Dans notre exemple, on pourrait vouloir filtrer les définitions qui correspondent à un Tag.
-
 
 Dans le "concept" de l'exemple : lister les définitions ayant pour tag "Java"
 
@@ -208,6 +275,9 @@ Concept
       - tags : "Java"
     - Payload : contenu joint à une requete ou une réponse réseau
       - tags: "HTTP"
+      
+Ici un domaine métier “riche”.
+Le comportement de filtrage est une méthode de la classe Concept qui va elle même déléguer à des sous objets.
 
 ```java
 class Concept {
@@ -268,48 +338,17 @@ class Tag {
 }
 
 ```
-## CRUD
-
-- Create
-- Read
-- Update
-- Delete
-
-Très peu de logique (d'intelligence métier).
-
-Dans ce cas on utilise souvent uniquement des DTO qu'on manipule dans des petites classes de service.
-
-
-## DAO : Data Access Object
-
-Un objet qui permet de d'accéder à des données situées dans un système externe (très souvent une base de données).
-
-https://martinfowler.com/eaaCatalog/transactionScript.html
-https://martinfowler.com/articles/gateway-pattern.html
-
-```java
-
-public interface DefinitionDao {
-
-	// Dans le cas d'un métier riche
-	public Definitions findDefinitionWithTag(Tag tag)
-
-	// Dans le cas d'un CRUD
-	public DefinitionsDto findDefinitionWithTag(String tag)
-	
-
-}
-```
 
 
 ## Mapper
 
-Conversion de DTO vers Domain model et réciproquement.
+
 Convertir un objet dans une forme vers un objet dans une autre forme
+Ex.
+- Conversion de DTO vers Domain model et réciproquement.
+- Conversion de Entity Jpa vers un Domain Model et réciproquement
 
-
-
-### CRUD le plus pur
+### Cas d'une application CRUD
 
 Pas besoin de mapper.
 
@@ -323,12 +362,18 @@ RequeteHttpGet -- DeSerialisation auto JSON vers JpaEntity --> RestRepository --
 ```
 
 
-Dans ton code, le repositort JPA est en même temps un Controlleur REST.
+Dans ton code, le repository JPA est en même temps un Controlleur REST.
 
-Entre le moment ou on appele le controller REST et celui ou le Repository JPA appelle la base de données, il y  pas ou peu de transformations.
+Entre le moment ou on appele le controller REST et celui ou le Repository JPA appelle la base de données, il y pas ou peu de transformations.
 
 
 **Ex.** Mon API et ma base de données n'est consommée que par mon application frontend et quand je change mon API je change mon frontend et ma base de données en même temps.
+
+Si tu veux éviter que le changement de noms des attributs de ton Entity soit cassant avec l'extérieurn tu peux utiliser des annotations pour configurer la sérialisation de ton Entity.
+
+```java
+
+```
 
 
 
