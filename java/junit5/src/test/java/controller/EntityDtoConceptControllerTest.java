@@ -68,7 +68,6 @@ class EntityDtoConceptControllerTest {
         List<ConceptResponseDto> concepts = controller.all();
 
         List<ConceptResponseDto.DefinitionDto> definitions = concepts.get(0).definitions;
-        definitions.get(0).tags.add("HJKHJ");
 
         // Assert (Then)
         ListAssert<ConceptResponseDto.DefinitionDto> result = assertThat(definitions).hasSize(3);
@@ -79,7 +78,7 @@ class EntityDtoConceptControllerTest {
         assertThat(first.contenu).isNotNull();
         assertThat(first.tags).isNotNull();
 
-        assertThat(definitions).hasSize(4);
+        assertThat(definitions).hasSize(3);
 
         assertThat(definitionsByTag.definitions).hasSize(2);
 
