@@ -8,11 +8,10 @@ package controller;
 
 
 import dao.ConceptRepository;
-import entities.ConceptEntity;
-import entities.DefinitionEntity;
+import dto.ConceptResponseDto;
+import dto.DefinitionsByTagResponseDto;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 // Risque de sécurité (on dévoile indirectement la structure de la base de données)
@@ -20,29 +19,22 @@ import java.util.stream.Collectors;
 //   - Problème de contrat d'interface avec l'extérieur
 //   - Risque de changement cassant des consommateurs de l'API si le contrat change
 //
-public class EntityConceptController {
+public class EntityDtoConceptController {
 
     private final ConceptRepository conceptRepository;
 
     // @Autowired
-    public EntityConceptController(ConceptRepository conceptRepository) {
+    public EntityDtoConceptController(ConceptRepository conceptRepository) {
         this.conceptRepository = conceptRepository;
     }
 
-    public List<ConceptEntity> all() {
-        return conceptRepository.findAll();
+    public List<ConceptResponseDto> all() {
+        return ConceptResponseDto
+                .fromList(conceptRepository.findAll());
     }
 
-    public List<DefinitionEntity> findDefinitionsByTag(String tag) {
-        List<DefinitionEntity> definitons = conceptRepository.findAllDefinitionsByTag(tag);
-
-
-        for (DefinitionEntity definiton : definitons) {
-            definiton.tags=null;
-            definiton.contenu=null;
-        }
-
-        return definitons;
-        // risque de modifier les données de la base de données selon la configuration de JPA
+    public DefinitionsByTagResponseDto findDefinitionsByTag(String tag) {
+        return DefinitionsByTagResponseDto
+                .fromList(conceptRepository.findAllDefinitionsByTag(tag));
     }
 }

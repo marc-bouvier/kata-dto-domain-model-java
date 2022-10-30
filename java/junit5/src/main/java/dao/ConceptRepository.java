@@ -24,10 +24,17 @@ public class ConceptRepository {
     }
 
     public List<DefinitionEntity> findAllDefinitionsByTag(String tag) {
-        // Equivalent d'une requete sql avec des jointures et une clause where
-        return concepts.stream()
-                .flatMap(conceptEntity -> conceptEntity.definitions.stream())
-                .filter(definitionEntity -> definitionEntity.tags.contains(tag))
-                .collect(toList());
+
+        List<DefinitionEntity> result = new ArrayList<>();
+
+        for (ConceptEntity concept : concepts) {
+            for (DefinitionEntity definition : concept.definitions) {
+                if(definition.tags.contains(tag)){
+                    result.add(definition);
+                }
+            }
+        }
+
+        return result;
     }
 }

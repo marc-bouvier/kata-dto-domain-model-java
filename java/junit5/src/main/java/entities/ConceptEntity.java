@@ -11,10 +11,11 @@ public class ConceptEntity implements Serializable{
    public  Date creation;
     public List<DefinitionEntity> definitions;
 
-    public static class DefinitionDto {
+    public ConceptEntity(Date creation, List<DefinitionEntity> definitions) {
+        this.creation = creation;
+        this.definitions = definitions;
+    }
 
-        public String name;
-        public String contenu;
-        public Set<String> tags;
+    public ConceptEntity() {
     }
 }
