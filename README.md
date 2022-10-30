@@ -268,13 +268,13 @@ Dans le "concept" de l'exemple : lister les définitions ayant pour tag "Java"
 
 Concept
 - date 30/10/2022 à 15h
-- Définitions : 
-    - DTO : format de données à plat serialisable
-      - tags : "DesignPattern", "Web", "Java"
-    - Serialization : convertir du texte en classes et réciproquement
-      - tags : "Java"
-    - Payload : contenu joint à une requete ou une réponse réseau
-      - tags: "HTTP"
+- Définitions :
+  - DTO : format de données à plat serialisable
+    - tags : "DesignPattern", "Web", "Java"
+  - Serialization : convertir du texte en classes et réciproquement
+    - tags : "Java"
+  - Payload : contenu joint à une requete ou une réponse réseau
+    - tags: "HTTP"
       
 Ici un domaine métier “riche”.
 Le comportement de filtrage est une méthode de la classe Concept qui va elle même déléguer à des sous objets.
@@ -369,9 +369,34 @@ Entre le moment ou on appele le controller REST et celui ou le Repository JPA ap
 
 **Ex.** Mon API et ma base de données n'est consommée que par mon application frontend et quand je change mon API je change mon frontend et ma base de données en même temps.
 
-Si tu veux éviter que le changement de noms des attributs de ton Entity soit cassant avec l'extérieurn tu peux utiliser des annotations pour configurer la sérialisation de ton Entity.
+Si tu veux éviter que le changement de noms des attributs de ton Entity soit cassant avec l'extérieur tu peux utiliser des annotations pour configurer la sérialisation de ton Entity.
 
 ```java
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
+// Ici, utiliser @Table(name="CXXX") et @Column(name="YYY")
+// Permet de DECOUPLER le nom de l'attribut ou de la classe
+// du nom de la table et des colonnes dans la base de données
+// Si on change l'un, ça ne change pas l'autre
+//
+// @JsonProperty("name") permet de figer le nom de dans le 
+// format JSON sérialisé
+@Entity
+@Table(name = "DEFINITION")
+public class DefinitionEntity {
+
+    @JsonProperty("name")
+    @Column(name = "NAME")
+    public String name;
+    @Column(name = "CONTENU")
+    public String contenu;
+    //...
+}
 
 ```
 
@@ -379,42 +404,51 @@ Si tu veux éviter que le changement de noms des attributs de ton Entity soit ca
 
 ## CRUD avec un peu de logique entre le controlleur et la base de donnée
 
-
-2 solutions
+Plusieurs solutions dont
 - Utiliser les Entity JPA dans le controlleur
 - **Utiliser des DTO dans le controlleur pour éviter d'utiliser les Entity JPA**
 
 ### Entity dans les controllers
+
 ```java
+package controller;
+
 // Couplage TRES fort
 
 // les noms des attributs de nos Entity correspondent aux noms des colonnes dans SQL
 // les noms des attributs de nos Entity correspondent aux noms des attributs dans le JSON retourné
 // - Changer un nom d'attribut d'Entity => Changement de SQL ET un changement de Swagger
 
-
 // Risque de sécurité (on dévoile indirectement la structure de la base de données)
 // Quand les Entity changent, ca change automatiquement les Controllers (et swagger)
 //   - Problème de contrat d'interface avec l'extérieur
 //   - Risque de changement cassant des consommateurs de l'API si le contrat change
-// 
-public class ConceptController{
-	public List<ConceptEntity> all(){
-		return conceptRepository.findAll();
-	}
+//
+public class EntityConceptController {
 
-	public List<DefinitionEntity> findDefinitionsByTag(String tag){
-		List<ConceptEntity> concepts =  conceptRepository.findAllByTag(tag);
-		
-		List<DefinitionEntity> definitions = concepts.stream().flatMap(...)
-		
-		List<DefinitionEntity> lightDefinitions = definitions.stream()
-		  .map(/* met null partout sauf name */);
+    private final ConceptRepository conceptRepository;
 
-		// risque de modifier les données de la base de données selon la configuration de JPA
+    // @Autowired
+    public EntityConceptController(ConceptRepository conceptRepository) {
+        this.conceptRepository = conceptRepository;
+    }
 
-		return lightDefinitions;
-	}
+    public List<ConceptEntity> all() {
+        return conceptRepository.findAll();
+    }
+
+    public List<DefinitionEntity> findDefinitionsByTag(String tag) {
+        List<DefinitionEntity> definitons = conceptRepository.findAllDefinitionsByTag(tag);
+
+
+        for (DefinitionEntity definiton : definitons) {
+            definiton.tags=null;
+            definiton.contenu=null;
+        }
+
+        return definitons;
+        // risque de modifier les données de la base de données selon la configuration de JPA
+    }
 }
 
 ```
@@ -428,54 +462,62 @@ Solution : utiliser des DTO pour "absorber" ce couplage
 https://github.com/marc-bouvier/kata-dto-domain-model-java/blob/master/java/junit5/src/main/java/controller/EntityDtoConceptController.java
 
 ```java
-package controller;  
-  
-// Couplage moins fort  
-  
-// les noms des attributs de nos Entity correspondent aux noms des colonnes dans SQL  
-// les noms des attributs de nos DTO correspondent aux noms des attributs dans le JSON retourné  
-// - Changer un nom d'attribut d'Entity => Changement de SQL MAIS PAS Swagger
-  
-  
-import dao.ConceptRepository;  
-import dto.ConceptResponseDto;  
-import dto.DefinitionsByTagResponseDto;  
-  
-import java.util.List;  
-  
-  
-// Risque de sécurité (on dévoile indirectement la structure de la base de données)  
-// Quand les Entity changent, ca change automatiquement les Controllers (et swagger)  
-//   - Problème de contrat d'interface avec l'extérieur  
-//   - Risque de changement cassant des consommateurs de l'API si le contrat change  
-//  
-public class EntityDtoConceptController {  
-  
-    private final ConceptRepository conceptRepository;  
-  
-    // @Autowired  
-    public EntityDtoConceptController(ConceptRepository conceptRepository) {  
-        this.conceptRepository = conceptRepository;  
-    }  
-  
-    public List<ConceptResponseDto> all() {  
-        return ConceptResponseDto  
-                .fromList(conceptRepository.findAll());  
-    }  
-  
-    public DefinitionsByTagResponseDto findDefinitionsByTag(String tag) {  
-        return DefinitionsByTagResponseDto  
-                .fromList(conceptRepository.findAllDefinitionsByTag(tag));  
-    }  
+package controller;
+
+
+import dao.ConceptRepository;
+import dto.ConceptResponseDto;
+import dto.DefinitionsByTagResponseDto;
+
+import java.util.List;
+
+
+// Couplage MOINBS fort
+
+// les noms des attributs de nos Entity correspondent aux noms des colonnes dans SQL
+// les noms des attributs de nos DTO correspondent aux noms des attributs dans le JSON retourné
+// - Changer un nom d'attribut d'Entity => Changement de SQL MAIS PAS un changement de Swagger
+// - Changer un nom d'attribut dans DOT => Changement de Swagger MAIS PAS de SQL
+
+// Sécurité on ne dévoile plus la structure de la base de données
+// - on peut choisir de n'exposer que le stricit minimum côté API
+
+public class EntityDtoConceptController {
+
+    private final ConceptRepository conceptRepository;
+
+    // @Autowired
+    public EntityDtoConceptController(ConceptRepository conceptRepository) {
+        this.conceptRepository = conceptRepository;
+    }
+
+    public List<ConceptResponseDto> all() {
+        return ConceptResponseDto
+                .fromList(conceptRepository.findAll());
+    }
+
+    public DefinitionsByTagResponseDto findDefinitionsByTag(String tag) {
+        return DefinitionsByTagResponseDto
+                .fromList(conceptRepository.findAllDefinitionsByTag(tag));
+    }
 }
 
 ```
 
 Iconvénients
 - C'est plus compliqué
+- Nécessite des mappers
+
+Avantages:
+- Quand un changement a lieu côté API ou Entity cas casse les mappers (et pas le reste du code)
 
 
-## Séparer DTO, Domain Model , Entities
+## Séparer DTO, Domain Model, Entities
+
+Ici, on introduit des Domain Model entre les DTO de l'API et les Entity (qui sont en fait des DTO mais côté base de données).
+
+Cela permet d'effectuer des opérations complexes sans devoir dépendre de la structure de données que nous impose la base de données ou l'API.
+Cela rendre par ailleurs testable la logique métier sans forcément lancer le serveur d'API ou une base de données.
 
 ```mermaid
 
@@ -486,15 +528,37 @@ DTO -- mapper --> Domain -- mapper --> Entity
 
 ```
 
-
 Ici, les mappers servent d'amortisseur.
-C'est à dire que
+
+C'est à dire que:
 - Si un truc change à un endroit c'est le mapper qui casse.
+  - Le Domain Model est protégé des changements de la base de données ET des changements de l'API
 
-
+Donc, les DTO et les mappers permettent un couplage plus faible entre l'API, le Domain Model et la base de données.
 
 ## Couplage
 
 - **Couplage fort** : quand on change un truc quelque part, ca change des trucs à plusieurs autres endroits
-- **Couplage faible** : quand on chang un truc quelque part, ca change peu/pas d'autres trucs
+- **Couplage faible** : quand on change un truc quelque part, ca change peu/pas d'autres trucs
 
+## Conclusion
+
+Essayer d'avoir un couplage faible entre les modules avec lesquels intéragissent ton système.
+
+- Protège les utilisateurs de ton API de changements qui viennent de ton Domain Model ou de ta base de données
+- Réduit la surface d'attaque de ton application en t'évitant d'exposer les détails des structures de données de ta base de données
+- Rend plus facilement testable ta logique métier
+- Introduit plus de complexité du fait d'indirections supplémentaires (DTOs et mappers)
+
+**A.** Si ton application est simple et que tu est le seul consommateur de ton API et de ta base de données
+- CRUD est certainement ce que tu cherches
+
+**B.** Si ton application reste simple
+- avec d'autres consommateurs de ton API ou de ta base de données
+
+Tu peux pour le moment te contenter de jouer sur la configuration des Serialisers/Deserializers (annotations Jackson @JsonProperty, annotations JPA @Table, @Column...).
+Ou utiliser des DTO et Mappers.
+
+**C.** Si ton application est complexe OU simple mais va devenir plus complexe.
+
+Il peut être intéressant d'introduire des DTO/Mappers voire également des Domain Model.

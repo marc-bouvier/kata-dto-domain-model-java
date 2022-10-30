@@ -12,7 +12,6 @@ import entities.ConceptEntity;
 import entities.DefinitionEntity;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 // Risque de sécurité (on dévoile indirectement la structure de la base de données)
