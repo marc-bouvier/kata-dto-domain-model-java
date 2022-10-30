@@ -504,7 +504,7 @@ public class EntityDtoConceptController {
 
 ```
 
-Iconvénients
+Inconvénients
 - C'est plus compliqué
 - Nécessite des mappers
 
@@ -545,10 +545,10 @@ Donc, les DTO et les mappers permettent un couplage plus faible entre l'API, le 
 
 Essayer d'avoir un couplage faible entre les modules avec lesquels intéragissent ton système.
 
-- Protège les utilisateurs de ton API de changements qui viennent de ton Domain Model ou de ta base de données
-- Réduit la surface d'attaque de ton application en t'évitant d'exposer les détails des structures de données de ta base de données
-- Rend plus facilement testable ta logique métier
-- Introduit plus de complexité du fait d'indirections supplémentaires (DTOs et mappers)
+- **Protège** les utilisateurs de ton API de changements qui viennent de ton Domain Model ou de ta base de données
+- **Réduit la surface d'attaque** de ton application en t'évitant d'exposer les détails des structures de données de ta base de données
+- **Rend plus facilement testable** ta logique métier
+- **Introduit plus de complexité** du fait d'indirections supplémentaires (DTOs et mappers)
 
 **A.** Si ton application est simple et que tu est le seul consommateur de ton API et de ta base de données
 - CRUD est certainement ce que tu cherches
@@ -556,7 +556,7 @@ Essayer d'avoir un couplage faible entre les modules avec lesquels intéragissen
 **B.** Si ton application reste simple
 - avec d'autres consommateurs de ton API ou de ta base de données
 
-Tu peux pour le moment te contenter de jouer sur la configuration des Serialisers/Deserializers (annotations Jackson @JsonProperty, annotations JPA @Table, @Column...).
+Tu peux pour le moment te contenter de jouer sur la configuration des Serialisers/Deserializers (annotations Jackson `@JsonProperty("name")`, annotations JPA `@Table(name="TABLENAME")`, `@Column(name="COLNAME")`...).
 Ou utiliser des DTO et Mappers.
 
 **C.** Si ton application est complexe OU simple mais va devenir plus complexe.
