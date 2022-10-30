@@ -1,5 +1,6 @@
 package dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import entities.ConceptEntity;
 import entities.DefinitionEntity;
 
@@ -11,9 +12,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+
+// ici, utiliser @JsonProperty("XXXX") permet de
+// découpler le nom de l'attribut du nom utilisé dans le JSON (et donc Swagger).
 public class ConceptResponseDto implements Serializable {
 
     // N° de serialisation
+    @JsonProperty("creationDate")
     public Date creation;
     public List<DefinitionDto> definitions;
 
